@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useUI } from '../app/store';
-import { getUpgrade, RARITY } from '../game/progression/upgrades';
+import { getUpgrade, RARITY, OFFER_SKIP, OFFER_REROLL } from '../game/progression/upgrades';
 import { chooseUpgrade } from '../game/systems/runFlow';
 import { startGame, toMenu } from '../app/actions';
 import { getCharacter } from '../game/characters/registry';
@@ -8,7 +8,7 @@ import { getStage, nextStage, stagesOf } from '../game/progression/adventure';
 import { world } from '../game/core/world';
 
 export function UpgradePick() {
-  const ids = useUI((s) => s.upgradeChoices), reason = useUI((s) => s.upgradeReason);
+  const ids = useUI((s) => s.upgradeChoices), reason = useUI((s) => s.upgradeReason), rerolls = useUI((s) => s.upgradeRerolls);
   useEffect(() => {
     const k = (e: KeyboardEvent) => { const i = ['Digit1', 'Digit2', 'Digit3'].indexOf(e.code); if (i >= 0 && ids[i]) chooseUpgrade(ids[i]); };
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);
@@ -17,7 +17,7 @@ export function UpgradePick() {
   return (
     <div className="ui-screen menu-overlay flex flex-col items-center backdrop-blur-sm" style={{ background: 'radial-gradient(circle, rgba(255,236,247,.55), rgba(90,40,120,.55))' }}>
       <div className="menu-title text-5xl font-black text-white outline-text mb-1">选择强化</div>
-      <div className="menu-sub font-bold text-white mb-4 drop-shadow">{reason === 'stage' ? '关卡奖励' : '生存奖励'}</div>
+      <div className="menu-sub font-bold text-white mb-4 drop-shadow">{reason === 'start' ? '开局自选（通关世界 1 解锁）' : reason === 'stage' ? '关卡奖励' : '波次奖励'}</div>
       <div className="upg-row flex gap-6">
         {ids.map((id, i) => {
           const u = getUpgrade(id), r = RARITY[u.rarity], have = stacks[id] ?? 0;
@@ -36,6 +36,11 @@ export function UpgradePick() {
           );
         })}
       </div>
+        <div className="flex gap-3 mt-5">
+          <button id="upg-reroll" disabled={rerolls <= 0} onClick={() => chooseUpgrade(OFFER_REROLL)}
+            className="candy-btn bg-candy-mint text-purple-900 disabled:opacity-40">{rerolls > 0 ? `重随一次（剩 ${rerolls}）` : '已重随'}</button>
+          <button id="upg-skip" onClick={() => chooseUpgrade(OFFER_SKIP)} className="candy-btn bg-candy-grape text-white">跳过</button>
+        </div>
     </div>
   );
 }

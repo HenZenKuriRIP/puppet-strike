@@ -42,6 +42,15 @@ export function botPlayStage(character: CharacterId, stage: number, seed: number
     input.reset();
     useUI.getState().set({ character } as any);
     runFlow.startRun('adventure', character, stage);
+    const autoResolve = () => {
+      const ui = useUI.getState();
+      if (ui.phase !== 'upgrade' && !(world.slots[world.local]?.offer)) return false;
+      if (ui.upgradeReason === 'stage') return false;
+      // Mid-wave / start offers must not stall the bot, but also must not grant free power
+      // that would invalidate the scripted balance tests.
+      runFlow.chooseUpgrade(OFFER_SKIP); return true;
+    };
+    while (autoResolve()) { /* start / leftover offer */ }
     useUI.getState().set({ phase: 'playing' } as any);
     // simulate the upgrades a player would have collected on earlier stages
     for (let i = 0; i < (opts.upgrades ?? (stage - 1) * 1); i++) { const ch = runFlowRoll(); if (ch) runFlow.chooseUpgradeDirect(ch); }
@@ -51,7 +60,11 @@ export function botPlayStage(character: CharacterId, stage: number, seed: number
     while (t < maxT) {
       const ui = useUI.getState();
       if (ui.phase === 'results') break;
-      if (ui.phase === 'upgrade') { break; } // stage cleared -> pick screen
+      if (ui.phase === 'upgrade') {
+        if (ui.upgradeReason === 'stage') break; // stage cleared -> pick screen
+        autoResolve();
+        continue;
+      }
       botStep(b, SIM.fixedDt, { ...BOT_SKILL[opts.skill ?? 'average'], ...opts, rand: Math.random });
       tick(advance); t += SIM.fixedDt;
       const hp = world.player.hp + world.shield.hp; if (hp < lastHp) dmg += lastHp - hp; lastHp = hp;
@@ -66,7 +79,7 @@ export function botPlayStage(character: CharacterId, stage: number, seed: number
     return res;
   }));
 }
-import { rollChoices } from '../progression/upgrades';
+import { rollChoices, OFFER_SKIP } from '../progression/upgrades';
 import { getStage } from '../progression/adventure';
 const getStageKind = (id: number) => getStage(id).kind;
 const runFlowRoll = () => rollChoices(world.run.stacks, 3)[0]?.id;

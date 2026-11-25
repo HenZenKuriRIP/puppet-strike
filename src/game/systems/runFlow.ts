@@ -9,8 +9,8 @@ import { COOP } from '../../config/game';
 import { coopHpMult } from '../progression/waveManager';
 import { useUI } from '../../app/store';
 import { CHAR_STATS, CHARACTERS, CharacterId, isUnlocked } from '../characters/registry';
-import { addUpgrade, computeMods, rollChoices, UpgradeId } from '../progression/upgrades';
-import { getStage, nextStage, STAGES } from '../progression/adventure';
+import { addUpgrade, computeMods, rollChoices, UpgradeId, OFFER_SKIP, OFFER_REROLL } from '../progression/upgrades';
+import { getStage, nextStage, STAGES, startPicksUnlocked } from '../progression/adventure';
 import { survivalWave } from '../progression/survival';
 import { createBoss } from '../boss/kingGummy';
 import { COLOSSUS } from '../boss/colossus';
@@ -52,6 +52,7 @@ export function startCoopRun(mode: GameMode, chars: CharacterId[], names: string
   }));
   useUI.getState().set({ mode, stage, coop: true, coopOffer: false, netMsg: '' });
   beginStage(stage, true);
+  if (startPicksUnlocked(useUI.getState().save.progress.cleared)) requestUpgrade('start');
 }
 
 export function startRun(mode: GameMode, character: CharacterId, stage = 1, map: WorldId = 'candy') {
@@ -64,6 +65,7 @@ export function startRun(mode: GameMode, character: CharacterId, stage = 1, map:
   refreshPlayerStats(true);
   useUI.getState().set({ mode, stage });
   beginStage(stage, true);
+  if (startPicksUnlocked(useUI.getState().save.progress.cleared)) requestUpgrade('start');
 }
 
 export function beginStage(stage: number, first = false) {
@@ -94,38 +96,62 @@ export function beginStage(stage: number, first = false) {
   uiSet({ fade: performance.now() });
 }
 
-export function requestUpgrade(reason: 'wave' | 'stage') {
+export type OfferReason = 'wave' | 'stage' | 'start';
+const REROLLS_PER_OFFER = 1;
+function rollOffer(stacks: typeof world.run.stacks, exclude: UpgradeId[] = []) {
+  return rollChoices(stacks, 3, Math.random, { exclude, diversify: true });
+}
+export function requestUpgrade(reason: OfferReason) {
   if (multi()) { // co-op: per-player offers, the sim keeps running (phase stays 'playing')
     let any = false;
     world.slots.forEach((sl, i) => {
-      const ch = rollChoices(sl.run.stacks, 3);
+      const ch = rollOffer(sl.run.stacks);
       if (!ch.length) { sl.offer = null; sl.picked = true; return; }
-      sl.offer = { ids: ch.map((c) => c.id), reason, t: COOP.upgradeTimeout }; sl.picked = false; any = true;
-      uiSet({ upgradeChoices: sl.offer.ids, upgradeReason: reason, coopOffer: true }, i);
+      sl.offer = { ids: ch.map((c) => c.id), reason, t: reason === 'start' ? Math.max(COOP.upgradeTimeout, 12) : COOP.upgradeTimeout, rerolls: REROLLS_PER_OFFER };
+      sl.picked = false; any = true;
+      uiSet({ upgradeChoices: sl.offer.ids, upgradeReason: reason, upgradeRerolls: sl.offer.rerolls, coopOffer: true }, i);
     });
     offerReason = reason;
+    if (reason === 'start' && any) world.waves.timer = Math.max(world.waves.timer, 10);
     if (!any) finishOffers();
     return;
   }
-  const choices = rollChoices(world.run.stacks, 3);
+  const choices = rollOffer(world.run.stacks);
   if (!choices.length) { continueAfterUpgrade(reason); return; }
   input.reset(); unlock();
-  useUI.getState().set({ phase: 'upgrade', upgradeChoices: choices.map((c) => c.id), upgradeReason: reason });
+  useUI.getState().set({ phase: 'upgrade', upgradeChoices: choices.map((c) => c.id), upgradeReason: reason, upgradeRerolls: REROLLS_PER_OFFER });
 }
-let offerReason: 'wave' | 'stage' = 'wave';
+let offerReason: OfferReason = 'wave';
 function finishOffers() {
   if (world.slots.some((sl) => sl.offer)) return;
   if (offerReason === 'stage') { const n = nextStage(world.run.stage); if (n) beginStage(n.id); }
   offerReason = 'wave';
 }
-/** co-op: slot `i` picks upgrade `id` (host-side; also used by the auto-pick timeout) */
-export function chooseUpgradeFor(i: number, id: UpgradeId) {
-  const sl = world.slots[i]; if (!sl || !sl.offer || !sl.offer.ids.includes(id)) return;
-  withActive(i, () => {
-    if (addUpgrade(world.run.stacks, id)) { world.run.taken.push(id); world.run.mods = computeMods(world.run.stacks); refreshPlayerStats(id === 'vitality'); }
-  });
+function applyUpgrade(id: UpgradeId) {
+  if (addUpgrade(world.run.stacks, id)) { world.run.taken.push(id); world.run.mods = computeMods(world.run.stacks); refreshPlayerStats(id === 'vitality'); return true; }
+  return false;
+}
+/** co-op: slot `i` picks upgrade `id` or a special offer action (host-side; also used by the auto-pick timeout) */
+export function chooseUpgradeFor(i: number, id: string) {
+  const sl = world.slots[i]; if (!sl || !sl.offer) return;
+  if (id === OFFER_REROLL) {
+    if (sl.offer.rerolls <= 0) return;
+    const next = rollOffer(sl.run.stacks, sl.offer.ids);
+    if (!next.length) return;
+    sl.offer.ids = next.map((c) => c.id); sl.offer.rerolls -= 1;
+    uiSet({ upgradeChoices: sl.offer.ids, upgradeRerolls: sl.offer.rerolls, coopOffer: true, upgradeReason: sl.offer.reason }, i);
+    return;
+  }
+  if (id === OFFER_SKIP) {
+    sl.offer = null; sl.picked = true;
+    uiSet({ upgradeChoices: [], coopOffer: false, upgradeRerolls: 0 }, i);
+    finishOffers();
+    return;
+  }
+  if (!sl.offer.ids.includes(id as UpgradeId)) return;
+  withActive(i, () => applyUpgrade(id as UpgradeId));
   sl.offer = null; sl.picked = true;
-  uiSet({ upgradeChoices: [], coopOffer: false }, i);
+  uiSet({ upgradeChoices: [], coopOffer: false, upgradeRerolls: 0 }, i);
   finishOffers();
 }
 export function stepOffers(dt: number) {
@@ -135,21 +161,25 @@ export function stepOffers(dt: number) {
     if (sl.offer.t <= 0 || !sl.connected) chooseUpgradeFor(i, sl.offer.ids[0]);
   }
 }
-export function chooseUpgrade(id: UpgradeId) {
+export function chooseUpgrade(id: string) {
   const ui = useUI.getState();
   if (world.coop.client) { runHooks.pick?.(id); return; }
   if (multi()) { if (world.slots[world.local]?.offer) chooseUpgradeFor(world.local, id); return; }
   if (ui.phase !== 'upgrade') return;
-  if (addUpgrade(world.run.stacks, id)) {
-    world.run.taken.push(id); world.run.mods = computeMods(world.run.stacks);
-    refreshPlayerStats(id === 'vitality');
-    sfx.combo(3);
+  if (id === OFFER_REROLL) {
+    if ((ui.upgradeRerolls ?? 0) <= 0) return;
+    const next = rollOffer(world.run.stacks, ui.upgradeChoices);
+    if (!next.length) return;
+    useUI.getState().set({ upgradeChoices: next.map((c) => c.id), upgradeRerolls: ui.upgradeRerolls - 1 });
+    return;
   }
-  continueAfterUpgrade(ui.upgradeReason as 'wave' | 'stage');
+  if (id === OFFER_SKIP) { continueAfterUpgrade(ui.upgradeReason as OfferReason); return; }
+  if (applyUpgrade(id as UpgradeId)) sfx.combo(3);
+  continueAfterUpgrade(ui.upgradeReason as OfferReason);
 }
-function continueAfterUpgrade(reason: 'wave' | 'stage') {
+function continueAfterUpgrade(reason: OfferReason) {
   if (reason === 'stage') { const n = nextStage(world.run.stage); if (n) beginStage(n.id); }
-  input.reset(); useUI.getState().set({ phase: 'playing', upgradeChoices: [] }); lock();
+  input.reset(); useUI.getState().set({ phase: 'playing', upgradeChoices: [], upgradeRerolls: 0 }); lock();
 }
 
 /** characters that were already unlocked when this run's first stage was cleared (stage clears persist before finishRun, so without this a stage-unlock would never be reported on the results screen) */

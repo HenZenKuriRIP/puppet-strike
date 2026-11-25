@@ -7,10 +7,10 @@ export const WORLD2 = { id: 2, name: 'Block City', nameZh: '积木都市' };
 /** the stage that must be cleared to open a world (World 2 unlocks after 1-3) */
 export const WORLD_UNLOCK_STAGE: Record<WorldId, number> = { candy: 0, block: 3 };
 export const STAGES: StageDef[] = [
-  { id: 1, world: 'candy', n: 1, label: '1-1', name: 'Lollipop Plaza', nameZh: '棒棒糖广场', kind: 'waves', desc: '3 波：发条兵、软糖坦克与果冻坦克群',
-    waves: [{ windup: 2, gunner: 2, gumdrop: 1 }, { windup: 2, gunner: 2, bunny: 2, gumdrop: 2, jelly: 1 }, { windup: 2, gunner: 2, bunny: 2, clown: 2, gumdrop: 2, jelly: 1, choco: 1 }] },
-  { id: 2, world: 'candy', n: 2, label: '1-2', name: 'Chocolate Riverside', nameZh: '巧克力河畔', kind: 'waves', desc: '3 波：重型/炮兵/旋转坦克登场，小心地面红圈',
-    waves: [{ gunner: 2, bunny: 2, drone: 1, gumdrop: 2, jelly: 1 }, { gunner: 2, clown: 1, drone: 2, gumdrop: 1, mint: 1, jelly: 1 }, { windup: 1, gunner: 2, drone: 1, tank: 1, mint: 1, lolli: 1, choco: 1, jelly: 1 }] },
+  { id: 1, world: 'candy', n: 1, label: '1-1', name: 'Lollipop Plaza', nameZh: '棒棒糖广场', kind: 'waves', desc: '3 波：每波一个优先目标，先学走位再打重甲',
+    waves: [{ windup: 3, gunner: 2 }, { windup: 2, gumdrop: 2, jelly: 1 }, { gunner: 2, clown: 2, choco: 1 }] },
+  { id: 2, world: 'candy', n: 2, label: '1-2', name: 'Chocolate Riverside', nameZh: '巧克力河畔', kind: 'waves', desc: '3 波：飞行、弹幕与炮兵轮流施压，小心地面红圈',
+    waves: [{ drone: 2, gunner: 2, bunny: 2 }, { mint: 1, gumdrop: 2, windup: 2 }, { lolli: 1, choco: 1, clown: 2 }] },
   { id: 3, world: 'candy', n: 3, label: '1-3', name: "King Gummy's Court", nameZh: '软糖国王的宫殿', kind: 'boss', desc: 'BOSS：软糖国王 KING GUMMY', waves: [] },
   { id: 4, world: 'block', n: 1, label: '2-1', name: 'Brick Street', nameZh: '积木大街', kind: 'waves', desc: '3 波：积木士兵列队推进，积木炮台封锁路口 — 推倒多米诺、推开砖墙',
     waves: [{ bsoldier: 3, windup: 2, gunner: 1 }, { bsoldier: 3, gunner: 2, bunny: 2, bturret: 1 }, { bsoldier: 3, gumdrop: 2, jelly: 1, drone: 1, bturret: 2, clown: 2 }] },
@@ -27,3 +27,21 @@ export const nextStage = (id: number) => { const cur = STAGES.find((s) => s.id =
 export const worldUnlocked = (w: WorldId, cleared: number[]) => WORLD_UNLOCK_STAGE[w] === 0 || cleared.includes(WORLD_UNLOCK_STAGE[w]);
 export const stageLabel = (id: number) => STAGES.find((s) => s.id === id)?.label ?? `${id}`;
 export const worldCleared = (w: WorldId, cleared: number[]) => stagesOf(w).every((s) => cleared.includes(s.id));
+
+export interface WaveGoal { text: string; priority?: string }
+const STAGE_GOALS: Record<number, WaveGoal[]> = {
+  1: [
+    { text: '先压住玩具炮手', priority: 'gunner' },
+    { text: '先打软糖坦克，果冻群随后清理', priority: 'gumdrop' },
+    { text: '别让炸弹小丑靠近，再绕背打重甲', priority: 'clown' },
+  ],
+  2: [
+    { text: '先打下无人机，再处理弹跳兔', priority: 'drone' },
+    { text: '优先打断薄荷旋转弹幕', priority: 'mint' },
+    { text: '躲开地面红圈，先拆棒棒糖炮兵', priority: 'lolli' },
+  ],
+};
+export function waveGoal(stageId: number, waveIndex: number): WaveGoal | null {
+  return STAGE_GOALS[stageId]?.[waveIndex] ?? null;
+}
+export const startPicksUnlocked = (cleared: number[]) => cleared.includes(3);

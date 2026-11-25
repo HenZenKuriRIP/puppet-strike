@@ -40,6 +40,7 @@ export function HUD() {
       <div className="hud-top absolute top-4 left-1/2 -translate-x-1/2 panel px-6 py-2 flex gap-6 items-center text-xl font-extrabold text-purple-900">
         <span className="hud-wave">波 <span className="text-candy-berry">{s.boss ? "BOSS" : s.totalWaves ? `${s.wave}/${s.totalWaves}` : s.wave}</span>{s.mode === "adventure" && <span className="ml-1 text-sm">S{s.stage}</span>}</span>
         <span className="hud-enemies">敌 <span className="text-candy-berry">{s.enemiesLeft}</span></span>
+        {s.waveHint && <div className="text-sm font-black text-white outline-text mt-1">{s.waveHint}</div>}
         <span className="hud-score text-base text-purple-600">{s.score}</span>
       </div>
       {s.banner && <div className="absolute top-1/4 w-full text-center text-5xl font-black text-white outline-text">{s.banner}</div>}

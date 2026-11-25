@@ -85,13 +85,15 @@ describe('enemy FSM', () => {
     run(f, { dist: 8, canSee: true, playerAlive: true, dead: false }, c.detectDelay + 0.05);
     expect(f.state).toBe('chase');
   });
-  it('chase -> attack (windup) -> release -> chase with cooldown', () => {
+  it('chase -> attack (windup) -> release -> recover -> chase with cooldown', () => {
     const f: FsmData = { state: 'chase', timer: 0, cooldown: 0 };
     const ev = stepFsm(f, c, { dist: 1, canSee: true, playerAlive: true, dead: false }, dt);
     expect(f.state).toBe('attack'); expect(ev.windupStarted).toBe(true);
     const evs = run(f, { dist: 1, canSee: true, playerAlive: true, dead: false }, c.windup + 0.05);
     expect(evs.filter((e) => e.attackRelease).length).toBe(1);
-    expect(f.state).toBe('chase'); expect(f.cooldown).toBeGreaterThan(0);
+    expect(f.state).toBe('recover'); expect(f.cooldown).toBeGreaterThan(0);
+    run(f, { dist: 1, canSee: true, playerAlive: true, dead: false }, 0.7);
+    expect(f.state).toBe('chase');
   });
   it('does not see through walls; dead is terminal', () => {
     const f = mk(); stepFsm(f, c, { dist: 5, canSee: false, playerAlive: true, dead: false }, dt);

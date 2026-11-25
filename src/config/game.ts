@@ -112,19 +112,19 @@ export interface EnemyConfig {
   brick?: boolean; mount?: 'turret' | 'crane';
 }
 export const ENEMIES = {
-  windup: { name: '发条士兵', hp: 55, speed: 3.6, radius: 0.5, height: 1.3, detectRange: 16, loseRange: 70, attackRange: 1.7,
+  windup: { name: '发条士兵', hp: 99, speed: 3.6, radius: 0.5, height: 1.3, detectRange: 16, loseRange: 70, attackRange: 1.7,
     windup: 0.55, cooldown: 0.9, damage: 14, detectDelay: 0.35, score: 100 },
-  gunner: { name: '玩具炮手', hp: 40, speed: 2.4, radius: 0.48, height: 1.4, detectRange: 24, loseRange: 70, attackRange: 15,
+  gunner: { name: '玩具炮手', hp: 88, speed: 2.4, radius: 0.48, height: 1.4, detectRange: 24, loseRange: 70, attackRange: 15,
     windup: 0.85, cooldown: 1.5, damage: 11, detectDelay: 0.45, score: 150, projectileSpeed: 15, projectileSize: 1, projectileColor: '#ff5c9a' },
-  bunny: { name: '弹跳兔', hp: 45, speed: 4.6, radius: 0.45, height: 1.2, detectRange: 22, loseRange: 70, attackRange: 7,
+  bunny: { name: '弹跳兔', hp: 88, speed: 4.6, radius: 0.45, height: 1.2, detectRange: 22, loseRange: 70, attackRange: 7,
     windup: 0.6, cooldown: 1.6, damage: 16, detectDelay: 0.3, score: 175, leapTime: 0.6, blastRadius: 1.9 },
   tank: { name: '铁皮坦克', hp: 220, speed: 1.3, radius: 0.95, height: 1.5, detectRange: 26, loseRange: 70, attackRange: 18,
     windup: 1.3, cooldown: 2.6, damage: 24, detectDelay: 0.6, score: 400, projectileSpeed: 11, projectileSize: 2.4, projectileColor: '#ff8c42',
     armorFront: 0.3, bindResist: 0.45 },
-  drone: { name: '飞行无人机', hp: 35, speed: 4.2, radius: 0.5, height: 0.6, detectRange: 26, loseRange: 70, attackRange: 16,
+  drone: { name: '飞行无人机', hp: 88, speed: 4.2, radius: 0.5, height: 0.6, detectRange: 26, loseRange: 70, attackRange: 16,
     windup: 0.5, cooldown: 1.2, damage: 8, detectDelay: 0.3, score: 200, projectileSpeed: 19, projectileSize: 0.8, projectileColor: '#7fd8ff',
     flying: true, hoverHeight: 4, orbitRadius: 9 },
-  clown: { name: '炸弹小丑', hp: 30, speed: 5.0, radius: 0.45, height: 1.35, detectRange: 22, loseRange: 70, attackRange: 2.3,
+  clown: { name: '炸弹小丑', hp: 48, speed: 5.0, radius: 0.45, height: 1.35, detectRange: 22, loseRange: 70, attackRange: 2.3,
     windup: 0.9, cooldown: 99, damage: 32, detectDelay: 0.25, score: 175, blastRadius: 3.4 },
 } as Record<EnemyType, EnemyConfig>;
 Object.assign(ENEMIES, {
@@ -140,7 +140,7 @@ Object.assign(ENEMIES, {
   mint: { name: '薄荷旋转坦克', hp: 170, speed: 1.6, radius: 0.9, height: 1.25, detectRange: 30, loseRange: 80, attackRange: 14,
     windup: 0.9, cooldown: 3.4, damage: 7, detectDelay: 0.4, score: 450, projectileSpeed: 8.5, projectileSize: 1.0, projectileColor: '#7fe8d0',
     candyTank: true, bullet: 'swirl', ring: { shots: 18, arms: 3, interval: 0.09, speed: 8.5, spin: 0.38 }, bindResist: 0.6 },
-  jelly: { name: '迷你果冻坦克', hp: 28, speed: 4.3, radius: 0.45, height: 0.62, detectRange: 26, loseRange: 80, attackRange: 1.5,
+  jelly: { name: '迷你果冻坦克', hp: 40, speed: 4.3, radius: 0.45, height: 0.62, detectRange: 26, loseRange: 80, attackRange: 1.5,
     windup: 0.35, cooldown: 0.9, damage: 7, detectDelay: 0.15, score: 60, candyTank: true, swarm: 5, bindResist: 1 },
   mega: { name: '巨型糖果坦克', hp: 1500, speed: 1.5, radius: 1.75, height: 2.5, detectRange: 40, loseRange: 90, attackRange: 22, minRange: 7,
     windup: 1.1, cooldown: 2.4, damage: 14, detectDelay: 0.5, score: 2500, projectileSpeed: 11, projectileSize: 1.6, projectileColor: '#ffd36b',
@@ -150,7 +150,7 @@ ENEMIES.king = { name: '软糖国王 KING GUMMY', hp: 3000, speed: 2.2, radius: 
   windup: 1, cooldown: 1, damage: 12, detectDelay: 0, score: 5000, projectileSpeed: 9, projectileSize: 1.3, projectileColor: '#ff5c9a', bindResist: 0, blastRadius: 7.5 };
 /** W2: Block City enemies (appended AFTER king: ENEMY_IDS = Object.keys(ENEMIES) is the snapshot type index) */
 Object.assign(ENEMIES, {
-  bsoldier: { name: '积木士兵', hp: 75, speed: 4.0, radius: 0.5, height: 1.4, detectRange: 22, loseRange: 80, attackRange: 1.9,
+  bsoldier: { name: '积木士兵', hp: 99, speed: 4.0, radius: 0.5, height: 1.4, detectRange: 22, loseRange: 80, attackRange: 1.9,
     windup: 0.5, cooldown: 1.0, damage: 15, detectDelay: 0.3, score: 130, armorFront: 0.55, bindResist: 0.8, brick: true },
   bturret: { name: '积木炮台', hp: 170, speed: 0, radius: 0.8, height: 1.8, detectRange: 30, loseRange: 80, attackRange: 26,
     windup: 0.85, cooldown: 1.9, damage: 11, detectDelay: 0.4, score: 280, projectileSpeed: 15, projectileSize: 1.1, projectileColor: '#2f7bff', bullet: 'choc', burst: 3, bindResist: 0.3, brick: true, mount: 'turret' },

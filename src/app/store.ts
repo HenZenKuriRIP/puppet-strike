@@ -25,7 +25,7 @@ export interface UIState {
   // M4
   mode: GameMode; stage: number; skillActive: boolean; rollCharges: number; rollMax: number; shield: number;
   boss: { hpFrac: number; phase: number; invuln: boolean; kind: 'king' | 'colossus' } | null;
-  upgradeChoices: UpgradeId[]; upgradeReason: string; results: Results | null; fade: number;
+  upgradeChoices: UpgradeId[]; upgradeReason: string; upgradeRerolls: number; waveHint: string; results: Results | null; fade: number;
   // M6 co-op
   coop: boolean; coopOffer: boolean; partner: PartnerHud | null; hint: string; reviveFrac: number; downed: boolean; ping: number; netMsg: string;
   save: SaveData;
@@ -38,7 +38,7 @@ export const initialHud = () => ({
   reloading: false, reloadFrac: 0, wave: 1, totalWaves: WAVES.length, enemiesLeft: 0, banner: '', score: 0, hitMarker: 0,
   weaponIndex: 0, ammoList: WEAPON_ORDER.map((id) => WEAPONS[id].magSize), dashCd: 0, rollCd: 0,
   combo: 0, comboTier: 0, comboFrac: 0, multiplier: 1, callout: null,
-  partner: null as PartnerHud | null, hint: '', reviveFrac: 0, downed: false, skillActive: false, rollCharges: 1, rollMax: 1, shield: 0, boss: null, upgradeChoices: [] as UpgradeId[], upgradeReason: '', results: null,
+  partner: null as PartnerHud | null, hint: '', reviveFrac: 0, downed: false, skillActive: false, rollCharges: 1, rollMax: 1, shield: 0, boss: null, upgradeChoices: [] as UpgradeId[], upgradeReason: '', upgradeRerolls: 0, waveHint: '', results: null,
 });
 const saved = loadSave();
 const defaults = { shake: FX.shakeEnabledDefault, volume: 0.5, sensitivity: 1, quality: 'medium' as QualityLevel, flash: true, postFX: true, hitStop: true, perfOverlay: false, funnyFx: true, aimAssist: false, music: true };

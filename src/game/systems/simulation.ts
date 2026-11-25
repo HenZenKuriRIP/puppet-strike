@@ -24,7 +24,8 @@ import { useUI } from '../../app/store';
 import { CHAR_SKILLS, CHAR_STATS, SkillId } from '../characters/registry';
 import { KING, stepBoss, bossInvulnerable, isBossType } from '../boss/kingGummy';
 import { COLOSSUS, freightLine, wallSlots } from '../boss/colossus';
-import { survivalWave, survivalHpMult, survivalDmgMult, isUpgradeWave } from '../progression/survival';
+import { survivalWave, survivalHpMult, survivalDmgMult, isUpgradeWave, survivalWaveGoal } from '../progression/survival';
+import { waveGoal } from '../progression/adventure';
 import { stepMechSim, fanDeflect, intent as mechIntent } from './mechSim';
 import { mechHit, mechExplosion, spawnBrick } from '../levels/mech';
 import { requestUpgrade, stageCleared, finishRun, stepOffers } from './runFlow';
@@ -34,7 +35,7 @@ export function effConfig(i: number): WeaponConfig {
   const base = WEAPONS[WEAPON_ORDER[i]], st = CHAR_STATS[world.run.character], m = world.run.mods;
   const tw = st.weaponTweak && st.weaponTweak.weapon === i ? st.weaponTweak : undefined;
   return { ...base,
-    fireRate: base.fireRate * st.fireRateMult * m.fireRate * (tw?.fireRateMult ?? 1),
+    fireRate: base.fireRate * st.fireRateMult * m.fireRate * (tw?.fireRateMult ?? 1) * (world.player.surgeT > 0 && m.skillSurge ? 1.45 : 1),
     damage: base.damage * st.damageMult * m.damage * (tw?.damageMult ?? 1),
     magSize: Math.round(base.magSize * m.magMult), reloadTime: base.reloadTime * m.reloadMult,
     pellets: base.pellets + (base.kind === 'hitscan' ? m.extraProjectiles : 0) };
@@ -61,10 +62,10 @@ export function bulletVis(cfg: WeaponConfig): number {
 }
 
 /** first hit of ray among living enemies; returns enemy, distance, crit(head) */
-function rayEnemies(o: V3, d: V3, max: number): { e: Enemy; t: number; crit: boolean } | null {
+function rayEnemies(o: V3, d: V3, max: number, skip?: Enemy): { e: Enemy; t: number; crit: boolean } | null {
   let best: { e: Enemy; t: number; crit: boolean } | null = null;
   for (const e of world.enemies.items) {
-    if (!e.active || e.dead) continue;
+    if (!e.active || e.dead || e === skip) continue;
     const c = ENEMIES[e.type];
     const body = raySphere(o, d, v3(e.pos.x, e.pos.y + c.height * 0.42, e.pos.z), c.radius * 1.05, max);
     const head = raySphere(o, d, v3(e.pos.x, e.pos.y + c.height * 0.95, e.pos.z), c.radius * 0.8, max);
@@ -128,8 +129,20 @@ export function damageEnemy(e: Enemy, amount: number, opts: { dir?: V3; crit?: b
   }
   if (r.killed) onEnemyKilled(e, true, !!opts.crit);
   else if (opts.crit) world.hitStop = Math.max(world.hitStop, HITSTOP.crit);
-  if (!r.killed && (e.fsm.state === 'idle' || e.fsm.state === 'patrol')) setState(e.fsm, 'detect', 0.1);
+  if (!r.killed && (e.fsm.state === 'idle' || e.fsm.state === 'patrol' || e.fsm.state === 'investigate')) setState(e.fsm, 'detect', 0.1);
+  const mods = world.run.mods;
+  if (!r.killed && !isBoss(e) && mods.windupBreak && e.fsm.state === 'attack') {
+    setState(e.fsm, 'recover', 0.45); e.leapT = 0; e.burstLeft = 0; evInterruptFx(e);
+  }
+  if (mods.bubblePop && e.bound > 0) {
+    const pos = v3(e.pos.x, e.pos.y + 0.6, e.pos.z);
+    e.bound = 0;
+    explode(pos, BUBBLE_BURST.radius, BUBBLE_BURST.damage, BUBBLE_BURST.knockback, 0, '#7fe8ff');
+  }
   return r;
+}
+function evInterruptFx(e: Enemy) {
+  burst(v3(e.pos.x, e.pos.y + 1, e.pos.z), 8, ['#fff3a0', '#ff8c42', '#ffffff'], 4, 0.3, 0.9);
 }
 
 /** chain/bounce/split: hop to nearest un-hit enemies (capped by PERF_CAPS via mods) */
@@ -230,6 +243,23 @@ function fireHitscan(cfg: WeaponConfig, spread: number) {
       a.sum += amt; a.crit ||= crit; acc.set(en2.e, a);
       if (i % 3 === 0) puff(end, 0.3, '#fff3f8');
       burst(end, cfg.pellets > 1 ? 5 : 9, cfg.pellets > 1 ? cfg.tracerColors : ['#fff6a8', '#ffffff', '#ff9ec7'], 4.2, 0.38, 1.05);
+      if (world.run.mods.pierceFocus && world.aiming > 0.5) {
+        const remain = max2 - en2.t;
+        if (remain > 0.4) {
+          const o2 = add(m, scale(d2, en2.t + 0.2));
+          const en3 = rayEnemies(o2, d2, remain - 0.2, en2.e);
+          const geo3 = world.raycast(o2, d2, remain - 0.2);
+          if (en3 && (geo3 === null || en3.t <= geo3)) {
+            const at2 = add(o2, scale(d2, en3.t));
+            const crit2 = en3.crit || Math.random() < world.run.mods.critChance;
+            const amt2 = cfg.damage * falloff(en2.t + 0.2 + en3.t, cfg.falloffStart, cfg.range, cfg.falloffMin) * (crit2 ? 1.6 : 1) * 0.75;
+            const b = acc.get(en3.e) ?? { sum: 0, crit: false, at: at2, dir: d2 };
+            b.sum += amt2; b.crit ||= crit2; acc.set(en3.e, b);
+            end = at2;
+            burst(at2, 4, ['#fff3a0', '#7fe8ff', '#ffffff'], 3.2, 0.28, 0.85);
+          }
+        }
+      }
     } else if (geo2 !== null) {
       end = add(m, scale(d2, geo2));
       mechHit(end.x, end.y, end.z, cfg.damage * falloff(geo2, cfg.falloffStart, cfg.range, cfg.falloffMin), d2.x, d2.z, world.time);
@@ -363,9 +393,28 @@ function onPlayerDown() {
   }
 }
 
+function reloadPulse(from: V3) {
+  const r = 4.2;
+  burst(v3(from.x, from.y + 0.4, from.z), 16, ['#c9a8ff', '#ffffff', '#7fe8ff'], 5, 0.4, 1);
+  snd.bubblePop();
+  for (const e of world.enemies.items) {
+    if (!e.active || e.dead || isBoss(e)) continue;
+    if (dist2D(e.pos, from) > r || Math.abs(e.pos.y - from.y) > 2.2) continue;
+    e.bound = Math.max(e.bound, 1.2 * (ENEMIES[e.type].bindResist ?? 1));
+    e.leapT = 0;
+    if (e.fsm.state === 'attack') setState(e.fsm, 'recover', 0.3);
+    damageEnemy(e, 12, {});
+  }
+}
 function stepPlayer(dt: number) {
   const p = world.player, slot = world.slots[world.active];
+  const wasRolling = p.roll.active > 0;
   stepSkill(p.dash, dt); stepSkill(p.roll, dt); stepArsenal(p.arsenal, dt);
+  if (p.surgeT > 0) p.surgeT = Math.max(0, p.surgeT - dt);
+  if (wasRolling && p.roll.active <= 0 && world.run.mods.rollReload) {
+    const cfg = effConfig(p.arsenal.index), ws = currentState(p.arsenal);
+    ws.ammo = cfg.magSize; if (ws.status === 'reloading' || ws.status === 'empty') { ws.status = 'ready'; ws.reloadTimer = 0; }
+  }
   p.animT += dt;
   if (p.dead) { p.anim = 'defeat'; p.vel.x = p.vel.z = 0; p.vel.y -= PLAYER.gravity * dt; moveAndCollide(p.pos, p.vel, scale(p.vel, dt), PLAYER.radius, PLAYER.height, ARENA_BOXES); return; }
   if (p.won) { p.anim = 'victory'; return; }
@@ -390,6 +439,7 @@ function stepPlayer(dt: number) {
   const sk = CHAR_SKILLS[world.run.character], mods = world.run.mods, stats = CHAR_STATS[world.run.character];
   if (pr.has('KeyF') && p.snipeCharge <= 0 && tryActivate(p.dash, { cooldown: sk.cooldown * mods.skillCdMult, duration: sk.duration }, p.roll.active > 0)) {
     activateSkill(sk.id, dir0); world.stats.skillCasts++;
+    if (mods.skillSurge) p.surgeT = 3;
   }
   const rollCd = SKILLS.roll.cooldown * mods.rollCdMult;
   if ((pr.has('ControlLeft') || pr.has('ControlRight') || pr.has('KeyC')) && p.dash.active <= 0 && p.roll.active <= 0 && p.rollCharges > 0) {
@@ -470,6 +520,7 @@ function stepPlayer(dt: number) {
   const ev = stepWeapon(ws, cfg, { trigger: input.mouseDown && !busy && p.snipeCharge <= 0 && canFire(p.arsenal), reload: pr.has('KeyR') && !busy }, dt);
   if (ev.fired) { p.facing = lerpAngle(p.facing, p.yaw, 0.6); fire(cfg); }
   if (ev.reloadStarted) snd.reload();
+  if (ev.reloadFinished && world.run.mods.reloadPulse) reloadPulse(p.pos);
   if (ev.dryFire) snd.dry();
   p.shootAnim = Math.max(0, p.shootAnim - dt * 7);
   p.flash = Math.max(0, p.flash - dt); p.invuln -= dt;
@@ -874,6 +925,7 @@ function refreshTargets() {
 }
 function canSee(from: V3, to: V3): boolean {
   const d = sub(to, from); const l = len(d);
+  if (l < 0.05) return true;
   return world.raycast(from, scale(d, 1 / l), l) === null;
 }
 function rotY(d: V3, a: number): V3 { const c = Math.cos(a), sn = Math.sin(a); return v3(d.x * c - d.z * sn, d.y, d.x * sn + d.z * c); }
@@ -974,7 +1026,6 @@ function stepEnemies(dt: number) {
     const eye = v3(e.pos.x, e.pos.y + c.height * 0.9, e.pos.z);
     const toP = norm(v3(T.x - e.pos.x, 0, T.z - e.pos.z));
     const busy = e.knockT > 0 || e.leapT > 0;
-    copy(e.tp, T);
 
     // knockback / leap: ballistic, no steering
     if (busy) {
@@ -998,7 +1049,11 @@ function stepEnemies(dt: number) {
       continue;
     }
 
-    const see = d < c.loseRange && (e.type === 'lolli' || canSee(eye, aimT));
+    // Real LOS is required for lolli (was omniscient inside loseRange). Other types still
+    // aggro and path by range so they can close around cover without a full navmesh.
+    const los = d < c.loseRange && canSee(eye, aimT);
+    if (los) copy(e.tp, T);
+    const see = e.type === 'lolli' ? los : d < c.loseRange;
     const ev = stepFsm(e.fsm, c, { dist: d, canSee: see, playerAlive: !p.dead, dead: e.dead }, dt);
     if (ev.windupStarted) { if (e.type === 'clown') snd.fuse(); else snd.windup(); }
     if (ev.windupStarted && e.type === 'bgolem') e.burstAng = (d < 6.5 || e.aux++ % 3 === 2) ? 1 : 0; // 1 = ground slam (telegraph ring around the golem), 0 = rock lob
@@ -1009,6 +1064,11 @@ function stepEnemies(dt: number) {
     }
     let want = v3(); let speed = 0; let hold = false;
     switch (e.fsm.state) {
+      case 'investigate': {
+        const tp = sub(e.tp, e.pos); tp.y = 0; const dl = len(tp);
+        if (dl > 0.6) { want = norm(tp); speed = c.speed * 0.75; }
+        break;
+      }
       case 'patrol': { const tp = sub(e.patrol, e.pos); tp.y = 0; const dl = len(tp);
         if (dl > 0.5) { want = norm(tp); speed = c.speed * 0.45;
           // M5: progress watchdog — no 0.4 m of progress toward the patrol point in 1.2 s (pressed into cover/jitter) → repath toward open floor
@@ -1236,12 +1296,19 @@ function stepWaveLogic(dt: number) {
       void cnt;
     }
   }
-  if (ev.waveStarted !== null) { snd.wave(); uiSet({ banner: `第 ${ev.waveStarted + 1} 波 · WAVE ${ev.waveStarted + 1}` }); setTimeout(() => uiSet({ banner: '' }), 1800); }
+  if (ev.waveStarted !== null) {
+    snd.wave();
+    const goal = r.mode === 'adventure' ? waveGoal(r.stage, ev.waveStarted) : survivalWaveGoal(ev.waveStarted + 1, world.mapId);
+    const label = `第 ${ev.waveStarted + 1} 波 · WAVE ${ev.waveStarted + 1}`;
+    uiSet({ banner: goal ? `${label} · ${goal.text}` : label, waveHint: goal?.text ?? '' });
+    setTimeout(() => { if (useUI.getState().banner.startsWith(label)) uiSet({ banner: '' }); }, 2400);
+  }
   if (ev.waveCleared !== null && !ev.allCleared) {
     r.wavesCleared++;
-    uiSet({ banner: '波次清除！WAVE CLEAR!' }); setTimeout(() => uiSet({ banner: '' }), 1800);
+    uiSet({ banner: '波次清除！WAVE CLEAR!', waveHint: '' }); setTimeout(() => uiSet({ banner: '' }), 1800);
     if (n > 1) respawnDowned(0.6);
-    if (r.mode === 'survival' && isUpgradeWave(ev.waveCleared + 1)) setTimeout(() => { const ph = useUI.getState().phase; if ((ph === 'playing' || ph === 'paused') && alivePlayers() > 0 && !world.ended) requestUpgrade('wave'); }, 900);
+    const wantUp = r.mode === 'survival' ? isUpgradeWave(ev.waveCleared + 1) : true; // adventure: offer after every mid-stage wave
+    if (wantUp) setTimeout(() => { const ph = useUI.getState().phase; if ((ph === 'playing' || ph === 'paused') && alivePlayers() > 0 && !world.ended) requestUpgrade('wave'); }, 900);
   }
   if (ev.allCleared && !world.outcome) { r.wavesCleared++; stageCleared(); }
 }
