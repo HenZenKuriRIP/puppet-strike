@@ -1,0 +1,159 @@
+{
+ "note": "Headless Chromium 1140 + SwiftShader software rendering @1280x720. FPS is NOT representative of a GPU.",
+ "presets": {
+  "low": {
+   "menu": {
+    "calls": 128,
+    "triangles": 191812
+   },
+   "gameplay": {
+    "fps": 10.8,
+    "frameMs": 92.9,
+    "simMs": 0.8,
+    "calls": 134.8,
+    "callsMax": 149,
+    "triangles": 187555.7,
+    "geometries": 257,
+    "textures": 12,
+    "programs": 25,
+    "enemies": 3
+   }
+  },
+  "medium": {
+   "menu": {
+    "calls": 220,
+    "triangles": 331229
+   },
+   "gameplay": {
+    "fps": 3.5,
+    "frameMs": 285.6,
+    "simMs": 0.2,
+    "calls": 232.3,
+    "callsMax": 243,
+    "triangles": 332237.3,
+    "geometries": 193,
+    "textures": 14,
+    "programs": 30,
+    "enemies": 0.5
+   }
+  },
+  "high": {
+   "menu": {
+    "calls": 245,
+    "triangles": 403199
+   },
+   "gameplay": {
+    "fps": 1.9,
+    "frameMs": 530.8,
+    "simMs": 0.2,
+    "calls": 247,
+    "callsMax": 247,
+    "triangles": 403665,
+    "geometries": 159,
+    "textures": 37,
+    "programs": 35,
+    "enemies": 0
+   }
+  }
+ },
+ "memory": [
+  {
+   "cycle": 1,
+   "quality": "low",
+   "heapMB": 50.8,
+   "geometries": 192,
+   "textures": 11,
+   "programs": 21
+  },
+  {
+   "cycle": 2,
+   "quality": "low",
+   "heapMB": 45.1,
+   "geometries": 188,
+   "textures": 11,
+   "programs": 21
+  },
+  {
+   "cycle": 3,
+   "quality": "low",
+   "heapMB": 45.3,
+   "geometries": 192,
+   "textures": 11,
+   "programs": 21
+  },
+  {
+   "cycle": 4,
+   "quality": "medium",
+   "heapMB": 43.9,
+   "geometries": 197,
+   "textures": 13,
+   "programs": 29
+  },
+  {
+   "cycle": 5,
+   "quality": "medium",
+   "heapMB": 44.1,
+   "geometries": 202,
+   "textures": 13,
+   "programs": 29
+  },
+  {
+   "cycle": 6,
+   "quality": "medium",
+   "heapMB": 46.6,
+   "geometries": 198,
+   "textures": 13,
+   "programs": 29
+  },
+  {
+   "cycle": 7,
+   "quality": "high",
+   "heapMB": 51.1,
+   "geometries": 194,
+   "textures": 37,
+   "programs": 37
+  },
+  {
+   "cycle": 8,
+   "quality": "high",
+   "heapMB": 44.9,
+   "geometries": 207,
+   "textures": 37,
+   "programs": 37
+  },
+  {
+   "cycle": 9,
+   "quality": "high",
+   "heapMB": 45.2,
+   "geometries": 199,
+   "textures": 37,
+   "programs": 37
+  },
+  {
+   "cycle": 10,
+   "quality": "low",
+   "heapMB": 48.7,
+   "geometries": 188,
+   "textures": 11,
+   "programs": 21
+  },
+  {
+   "cycle": 11,
+   "quality": "low",
+   "heapMB": 46,
+   "geometries": 188,
+   "textures": 11,
+   "programs": 21
+  },
+  {
+   "cycle": 12,
+   "quality": "low",
+   "heapMB": 48.5,
+   "geometries": 179,
+   "textures": 11,
+   "programs": 21
+  }
+ ],
+ "errors": [],
+ "httpFailures": []
+}

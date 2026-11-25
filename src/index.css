@@ -1,0 +1,9 @@
+
+/* M4 */
+@keyframes cardIn { from { opacity: 0; transform: translateY(40px) scale(.85) rotate(-3deg); } to { opacity: 1; transform: none; } }
+@keyframes vBounce { 0%,100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.08) rotate(2deg); } }
+.victory-bounce { animation: vBounce 1.2s ease-in-out infinite; }
+.confetti-rain { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.confetti-rain i { position: absolute; top: -20px; width: 10px; height: 16px; border-radius: 3px; animation: fall 3s linear infinite; }
+@keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+.locked { filter: grayscale(.85); opacity: .7; }

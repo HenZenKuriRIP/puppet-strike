@@ -1,0 +1,39 @@
+[
+ {
+  "name": "idle arena (bot, survival wave 1)",
+  "frames": 1200,
+  "meanMs": 0.1133,
+  "p95Ms": 0.2647,
+  "maxMs": 4.518,
+  "enemies": 3,
+  "projectiles": 0,
+  "sparks": 10,
+  "hazards": 0
+ },
+ {
+  "name": "stress: 20 enemies + 200 projectiles + 500 sparks (pools full every frame)",
+  "frames": 1200,
+  "meanMs": 2.6078,
+  "p95Ms": 3.6047,
+  "maxMs": 8.508,
+  "enemies": 64,
+  "projectiles": 255,
+  "sparks": 1,
+  "hazards": 0
+ },
+ {
+  "name": "M6 co-op: 2 players + 40 candy-tank/classic enemies (host sim + snapshot build)",
+  "players": 2,
+  "frames": 1200,
+  "meanMs": 0.7892,
+  "p95Ms": 1.0868,
+  "maxMs": 1.971,
+  "snapshotMeanMs": 0.0438,
+  "snapshotP95Ms": 0.0789,
+  "snapshotAvgBytes": 4990,
+  "enemies": 44,
+  "projectiles": 10,
+  "sparks": 16,
+  "hazards": 2
+ }
+]

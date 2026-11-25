@@ -1,0 +1,39 @@
+node_modules
+dist
+dist-e2e
+
+# Android / Capacitor secrets & local machine files (NEVER commit keystores)
+*.jks
+*.keystore
+*.keystore.properties
+keystore.properties
+android/key.properties
+android/local.properties
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/.idea/
+android/*.iml
+android/app/release/
+*.apk
+*.aab
+*.ap_
+.env.android
+.env.*.local
+secrets/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Dev logs and local machine reports (never commit)
+logs/
+*.log
+
+# Local env overrides (keep *.example)
+.env
+.env.e2e

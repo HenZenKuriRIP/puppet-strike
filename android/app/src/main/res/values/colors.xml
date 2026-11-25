@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- P0-1 brand placeholders — replace with final palette later -->
+    <color name="colorPrimary">#FF6BA8</color>
+    <color name="colorPrimaryDark">#C94A7A</color>
+    <color name="colorAccent">#FFB3D1</color>
+    <color name="splashBackground">#FFB3D1</color>
+</resources>

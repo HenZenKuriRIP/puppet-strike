@@ -1,0 +1,24 @@
+import { chromium } from 'playwright-core';
+const exe = process.env.HOME + '/.cache/ms-playwright/chromium-1140/chrome-linux/chrome';
+const b = await chromium.launch({ executablePath: exe, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
+const errs = [];
+p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.type() + ': ' + m.text()); });
+p.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
+await p.goto('http://localhost:4173'); await p.waitForTimeout(4000);
+await p.screenshot({ path: '../screenshots/01-menu.png' });
+await p.click('#btn-play'); await p.waitForTimeout(1500);
+await p.screenshot({ path: '../screenshots/02-ingame-start.png' });
+await p.keyboard.down('KeyW'); await p.waitForTimeout(700); await p.keyboard.up('KeyW');
+await p.keyboard.press('Space'); await p.waitForTimeout(3500);
+// aim roughly at an enemy by turning player yaw via exposed state is not available; just fire forward
+await p.mouse.move(640, 360); await p.mouse.down(); await p.waitForTimeout(1200);
+await p.screenshot({ path: '../screenshots/03-ingame-firing.png' }); await p.mouse.up();
+await p.waitForTimeout(3000);
+await p.screenshot({ path: '../screenshots/04-ingame-combat.png' });
+const hud = await p.evaluate(() => document.body.innerText.slice(0, 300));
+await p.keyboard.press('Escape'); await p.waitForTimeout(500);
+await p.screenshot({ path: '../screenshots/05-paused.png' });
+console.log('HUD:', hud.replace(/\n/g, ' | '));
+console.log('ERRORS:', errs.slice(0, 15).join('\n'));
+await b.close();

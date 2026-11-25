@@ -1,0 +1,60 @@
+{
+ "note": "Headless Chromium 1140 + SwiftShader software rendering @1280x720. FPS is NOT representative of a GPU.",
+ "presets": {
+  "low": {
+   "menu": {
+    "calls": 127,
+    "triangles": 260526
+   },
+   "gameplay": {
+    "fps": 6.4,
+    "frameMs": 158.5,
+    "simMs": 2.8,
+    "calls": 153.3,
+    "callsMax": 159,
+    "triangles": 289959.3,
+    "geometries": 188,
+    "textures": 6,
+    "programs": 28,
+    "enemies": 4
+   }
+  },
+  "medium": {
+   "menu": {
+    "calls": 156,
+    "triangles": 435897
+   },
+   "gameplay": {
+    "fps": 2.1,
+    "frameMs": 478.6,
+    "simMs": 0.5,
+    "calls": 178,
+    "callsMax": 178,
+    "triangles": 456397,
+    "geometries": 158,
+    "textures": 8,
+    "programs": 32,
+    "enemies": 0
+   }
+  },
+  "high": {
+   "menu": {
+    "calls": 185,
+    "triangles": 554879
+   },
+   "gameplay": {
+    "fps": 1.5,
+    "frameMs": 666.3,
+    "simMs": 0.4,
+    "calls": 207,
+    "callsMax": 207,
+    "triangles": 575379,
+    "geometries": 159,
+    "textures": 32,
+    "programs": 44,
+    "enemies": 0
+   }
+  }
+ },
+ "memory": []
+}

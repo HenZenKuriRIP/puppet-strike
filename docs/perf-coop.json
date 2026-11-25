@@ -1,0 +1,19 @@
+{
+ "note": "Two headless Chromium pages on ONE machine (SwiftShader software GL, localhost relay). FPS is not representative of a GPU; draw calls / sim ms are.",
+ "host": {
+  "calls": 619,
+  "triangles": 495254,
+  "fps": 3.1,
+  "simMs": 5.262,
+  "enemies": 32,
+  "ping": null
+ },
+ "guest": {
+  "calls": 124,
+  "triangles": 283928,
+  "fps": 4,
+  "simMs": 0,
+  "enemies": 32,
+  "ping": null
+ }
+}
