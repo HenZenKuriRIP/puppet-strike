@@ -107,7 +107,7 @@ export function parseS2C(raw: unknown): S2C | null {
 
 // ---------------------------------------------------------------- snapshots
 export const ANIMS = ['idle', 'run', 'jump', 'dodge', 'dash', 'shoot', 'reload', 'hit', 'victory', 'defeat'] as const;
-export const FSM_STATES = ['idle', 'patrol', 'detect', 'chase', 'attack', 'dead'] as const;
+export const FSM_STATES = ['idle', 'patrol', 'detect', 'chase', 'attack', 'dead', 'recover', 'investigate'] as const;
 export const q2 = (x: number) => Math.round(x * 100) / 100;
 export const q3 = (x: number) => Math.round(x * 1000) / 1000;
 

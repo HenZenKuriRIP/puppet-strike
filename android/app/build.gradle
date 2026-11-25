@@ -7,8 +7,8 @@ android {
         applicationId "com.puppetstrike.toybox"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 14
-        versionName "0.1.13-o3d"  // keep in sync with package.json; bump both on release
+        versionCode 15
+        versionName "0.1.14-playability"  // keep in sync with package.json; bump both on release
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

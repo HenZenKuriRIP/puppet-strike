@@ -21,7 +21,8 @@ export function survivalWaveBlock(n: number): WaveDef {
     w.bgolem = (w.bgolem ?? 0) + Math.min(2, n / 10);
     while (waveCount(w) > SURVIVAL.maxPerWave) { let b: EnemyType | null = null; for (const t of base) if (t !== 'bgolem' && (w[t] ?? 0) > 0 && (!b || (w[t] ?? 0) > (w[b] ?? 0))) b = t; if (!b) break; w[b] = (w[b] ?? 0) - 1; }
   }
-  return w;
+  const fresh = UNLOCK_BLOCK.filter(([, w0]) => n >= w0 && n - w0 <= 1).map(([t]) => t);
+  return capTypes(w, base, SURVIVAL_TYPE_CAP, fresh);
 }
 /** wave n is 1-based */
 export function survivalWave(n: number, map: 'candy' | 'block' = 'candy'): WaveDef {
@@ -37,9 +38,50 @@ export function survivalWave(n: number, map: 'candy' | 'block' = 'candy'): WaveD
     const sum = () => waveCount(w);
     while (sum() > SURVIVAL.maxPerWave) { let b: EnemyType | null = null; for (const t of base) if ((w[t] ?? 0) > 0 && (!b || (w[t] ?? 0) > (w[b] ?? 0))) b = t; if (!b) break; w[b] = (w[b] ?? 0) - 1; }
   }
-  return w;
+  const fresh = UNLOCK.filter(([, w0]) => n >= w0 && n - w0 <= 1).map(([t]) => t);
+  return capTypes(w, base, SURVIVAL_TYPE_CAP, fresh);
 }
 export const survivalHpMult = (n: number) => Math.min(SURVIVAL.maxHpMult, 1 + SURVIVAL.hpPerWave * (n - 1));
 export const survivalDmgMult = (n: number) => Math.min(SURVIVAL.maxDmgMult, 1 + SURVIVAL.dmgPerWave * (n - 1));
 export const waveCount = (w: WaveDef) => Object.values(w).reduce((a, b) => a + (b ?? 0), 0);
+
+/** Keep early/mid survival waves readable: at most this many archetypes at once. */
+export const SURVIVAL_TYPE_CAP = 4;
+function capTypes(w: WaveDef, preferred: EnemyType[], max = SURVIVAL_TYPE_CAP, fresh: EnemyType[] = []): WaveDef {
+  const keys = (Object.keys(w) as EnemyType[]).filter((k) => (w[k] ?? 0) > 0);
+  if (keys.length <= max) return w;
+  const keep = new Set<EnemyType>();
+  for (const t of ['mega', 'king', 'colossus', 'bgolem'] as EnemyType[]) if ((w[t] ?? 0) > 0) keep.add(t);
+  // Newly unlocked threats should actually show up on the waves that introduce them.
+  for (const t of fresh) if ((w[t] ?? 0) > 0 && keep.size < max) keep.add(t);
+  // Keep the original wave-1 core so late waves still have fodder (tests + readable frontline).
+  let early = 0;
+  for (const t of preferred) {
+    if ((w[t] ?? 0) > 0 && early < 2 && keep.size < max) { keep.add(t); early++; }
+  }
+  for (let i = preferred.length - 1; i >= 0 && keep.size < max; i--) if ((w[preferred[i]] ?? 0) > 0) keep.add(preferred[i]);
+  for (const t of keys) if (keep.size < max) keep.add(t);
+  let leftover = 0;
+  for (const t of keys) if (!keep.has(t)) { leftover += w[t] ?? 0; delete w[t]; }
+  if (leftover) {
+    let sink: EnemyType | null = null;
+    const bosses = new Set(['mega', 'king', 'colossus', 'bgolem']);
+    for (let i = preferred.length - 1; i >= 0; i--) if (keep.has(preferred[i]) && !bosses.has(preferred[i])) { sink = preferred[i]; break; }
+    if (!sink) sink = [...keep][0];
+    if (sink) w[sink] = (w[sink] ?? 0) + leftover;
+  }
+  return w;
+}
+export function survivalWaveGoal(n: number, map: 'candy' | 'block' = 'candy'): { text: string; priority?: string } | null {
+  if (map === 'block') {
+    if (n === 1) return { text: '积木士兵会列队压上，先打靠前的那些', priority: 'bsoldier' };
+    if (n === 3) return { text: '优先拆除积木炮台', priority: 'bturret' };
+    if (n === 5) return { text: '先风筝积木巨人', priority: 'bgolem' };
+    return null;
+  }
+  if (n === 1) return { text: '先压住炮手，发条兵可以后打', priority: 'gunner' };
+  if (n === 2) return { text: '软糖坦克是优先目标', priority: 'gumdrop' };
+  if (n === 3) return { text: '别让炸弹小丑靠近', priority: 'clown' };
+  return null;
+}
 export const isUpgradeWave = (clearedWave: number) => clearedWave > 0 && clearedWave % SURVIVAL.upgradeEvery === 0;

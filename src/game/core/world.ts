@@ -33,7 +33,7 @@ export interface Player {
   arsenal: Arsenal; airTime: number;
   dash: SkillState; roll: SkillState; moveDir: V3; dashHits: Set<number>;
   anim: PlayerAnim; animT: number; won: boolean;
-  rollCharges: number; rollRecharge: number; snipeCharge: number;
+  rollCharges: number; rollRecharge: number; snipeCharge: number; surgeT: number;
   padCd: number; revive: number; downed: number;
 }
 export interface Enemy {
@@ -75,14 +75,14 @@ function makePlayer(sp: [number, number, number] = PLAYER_SPAWN): Player {
     hp: PLAYER.maxHp, maxHp: PLAYER.maxHp, dead: false, flash: 0, invuln: 0, runPhase: 0, speed: 0, shootAnim: 0,
     aimHold: 0, sprinting: false, arsenal: createArsenal(), airTime: 0,
     dash: createSkill(), roll: createSkill(), moveDir: v3(0, 0, -1), dashHits: new Set(), anim: 'idle', animT: 0, won: false,
-    rollCharges: 1, rollRecharge: 0, snipeCharge: 0, padCd: 0, revive: 0, downed: 0,
+    rollCharges: 1, rollRecharge: 0, snipeCharge: 0, surgeT: 0, padCd: 0, revive: 0, downed: 0,
   };
 }
 
 
 // ---------------- M6: player slots ----------------
 export interface PlayerRun { character: CharacterId; stacks: Stacks; mods: Mods; taken: UpgradeId[] }
-export interface Offer { ids: UpgradeId[]; reason: string; t: number }
+export interface Offer { ids: UpgradeId[]; reason: string; t: number; rerolls: number }
 export interface Slot {
   player: Player; cam: { pos: V3; fwd: V3 }; combo: ComboState; muzzleFlash: number; aiming: number;
   shield: { hp: number; t: number }; decoy: { pos: V3; t: number }; turret: { pos: V3; t: number; cd: number; aim: number };

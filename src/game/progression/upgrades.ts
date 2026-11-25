@@ -1,5 +1,7 @@
 // M4 roguelite Upgrade Registry: data-driven, rarity-weighted, capped, with synergies.
+// 0.1.14: role tags, diversified rolls, and a few verb-changing upgrades (not just flat stats).
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
+export type UpgradeRole = 'fire' | 'control' | 'survive' | 'mobility';
 export const RARITY = {
   common: { weight: 60, color: '#9ef0d0', label: '普通 Common' },
   rare: { weight: 25, color: '#8ec9ff', label: '稀有 Rare' },
@@ -10,26 +12,36 @@ export const RARITY = {
 export const PERF_CAPS = { extraProjectiles: 3, chainTargets: 4, bounces: 2, splitShards: 3 };
 
 export type UpgradeId = 'multishot' | 'rapid' | 'power' | 'bounce' | 'crit' | 'vampire' | 'lightning' | 'freezeBlast'
-  | 'rollIframes' | 'split' | 'infusion' | 'vitality' | 'swift' | 'skillCd' | 'magazine' | 'stormCore' | 'sugarRush';
-export interface UpgradeDef { id: UpgradeId; name: string; nameZh: string; icon: string; rarity: Rarity; maxStacks: number; desc: string; requires?: UpgradeId[] }
+  | 'rollIframes' | 'split' | 'infusion' | 'vitality' | 'swift' | 'skillCd' | 'magazine' | 'stormCore' | 'sugarRush'
+  | 'rollReload' | 'reloadPulse' | 'windupBreak' | 'bubblePop' | 'pierceFocus' | 'skillSurge';
+export interface UpgradeDef {
+  id: UpgradeId; name: string; nameZh: string; icon: string; rarity: Rarity; maxStacks: number; desc: string;
+  role: UpgradeRole; requires?: UpgradeId[];
+}
 export const UPGRADES: UpgradeDef[] = [
-  { id: 'multishot', name: '+1 Projectile', nameZh: '多重弹', icon: '🍡', rarity: 'rare', maxStacks: 3, desc: '每次射击额外 +1 发弹丸' },
-  { id: 'rapid', name: 'Sugar Rush Trigger', nameZh: '速射', icon: '⚡', rarity: 'common', maxStacks: 5, desc: '射速 +12%' },
-  { id: 'power', name: 'Hard Candy', nameZh: '硬糖弹头', icon: '💥', rarity: 'common', maxStacks: 5, desc: '伤害 +12%' },
-  { id: 'bounce', name: 'Bouncy Bullets', nameZh: '弹跳子弹', icon: '🏀', rarity: 'rare', maxStacks: 2, desc: '命中后弹向附近敌人（50% 伤害）' },
-  { id: 'crit', name: 'Lucky Sprinkle', nameZh: '幸运糖屑', icon: '🎯', rarity: 'common', maxStacks: 4, desc: '暴击率 +8%' },
-  { id: 'vampire', name: 'Sweet Tooth', nameZh: '甜牙', icon: '🧁', rarity: 'common', maxStacks: 4, desc: '击杀回复 4 生命' },
-  { id: 'lightning', name: 'Fizzy Lightning', nameZh: '汽水闪电', icon: '🌩️', rarity: 'epic', maxStacks: 3, desc: '命中 15% 几率连锁闪电（+1 目标/层）' },
-  { id: 'freezeBlast', name: 'Ice Pop', nameZh: '冰棒爆裂', icon: '🧊', rarity: 'epic', maxStacks: 1, desc: '击杀时冰爆，冻结 3 米内敌人' },
-  { id: 'rollIframes', name: 'Marshmallow Roll', nameZh: '棉花糖翻滚', icon: '☁️', rarity: 'common', maxStacks: 3, desc: '翻滚无敌 +0.12 秒，冷却 -15%' },
-  { id: 'split', name: 'Candy Split', nameZh: '糖果分裂', icon: '✨', rarity: 'rare', maxStacks: 2, desc: '击杀时分裂糖片打击附近敌人' },
-  { id: 'infusion', name: 'Chili Candy', nameZh: '辣糖附魔', icon: '🌶️', rarity: 'epic', maxStacks: 1, desc: '命中附加灼烧（每秒 8 伤害，2 秒）' },
-  { id: 'vitality', name: 'Extra Stuffing', nameZh: '加厚棉花', icon: '❤️', rarity: 'common', maxStacks: 4, desc: '最大生命 +25 并回满' },
-  { id: 'swift', name: 'Roller Skates', nameZh: '溜冰鞋', icon: '🛼', rarity: 'common', maxStacks: 3, desc: '移动速度 +8%' },
-  { id: 'skillCd', name: 'Wind-up Key', nameZh: '发条钥匙', icon: '🔑', rarity: 'rare', maxStacks: 3, desc: 'F 技能冷却 -15%' },
-  { id: 'magazine', name: 'Gumball Clip', nameZh: '大弹匣', icon: '🍬', rarity: 'common', maxStacks: 3, desc: '弹匣 +30%，换弹 -15%' },
-  { id: 'stormCore', name: 'Storm Core', nameZh: '风暴核心', icon: '🌀', rarity: 'legendary', maxStacks: 1, desc: '协同：闪电必定触发且附加灼烧', requires: ['lightning', 'infusion'] },
-  { id: 'sugarRush', name: 'Sugar Rush', nameZh: '糖分暴走', icon: '🍭', rarity: 'legendary', maxStacks: 1, desc: '连击倍率上限 +1，击杀减少技能冷却 0.5 秒' },
+  { id: 'multishot', name: '+1 Projectile', nameZh: '多重弹', icon: '🍡', rarity: 'rare', maxStacks: 3, role: 'fire', desc: '每次射击额外 +1 发弹丸' },
+  { id: 'rapid', name: 'Sugar Rush Trigger', nameZh: '速射', icon: '⚡', rarity: 'common', maxStacks: 5, role: 'fire', desc: '射速 +12%' },
+  { id: 'power', name: 'Hard Candy', nameZh: '硬糖弹头', icon: '💥', rarity: 'common', maxStacks: 5, role: 'fire', desc: '伤害 +12%' },
+  { id: 'bounce', name: 'Bouncy Bullets', nameZh: '弹跳子弹', icon: '🏀', rarity: 'rare', maxStacks: 2, role: 'fire', desc: '命中后弹向附近敌人（50% 伤害）' },
+  { id: 'crit', name: 'Lucky Sprinkle', nameZh: '幸运糖屑', icon: '🎯', rarity: 'common', maxStacks: 4, role: 'fire', desc: '暴击率 +8%' },
+  { id: 'vampire', name: 'Sweet Tooth', nameZh: '甜牙', icon: '🧁', rarity: 'common', maxStacks: 4, role: 'survive', desc: '击杀回复 4 生命' },
+  { id: 'lightning', name: 'Fizzy Lightning', nameZh: '汽水闪电', icon: '🌩️', rarity: 'epic', maxStacks: 3, role: 'fire', desc: '命中 15% 几率连锁闪电（+1 目标/层）' },
+  { id: 'freezeBlast', name: 'Ice Pop', nameZh: '冰棒爆裂', icon: '🧊', rarity: 'epic', maxStacks: 1, role: 'control', desc: '击杀时冰爆，冻结 3 米内敌人' },
+  { id: 'rollIframes', name: 'Marshmallow Roll', nameZh: '棉花糖翻滚', icon: '☁️', rarity: 'common', maxStacks: 3, role: 'mobility', desc: '翻滚无敌 +0.12 秒，冷却 -15%' },
+  { id: 'split', name: 'Candy Split', nameZh: '糖果分裂', icon: '✨', rarity: 'rare', maxStacks: 2, role: 'fire', desc: '击杀时分裂糖片打击附近敌人' },
+  { id: 'infusion', name: 'Chili Candy', nameZh: '辣糖附魔', icon: '🌶️', rarity: 'epic', maxStacks: 1, role: 'fire', desc: '命中附加灼烧（每秒 8 伤害，2 秒）' },
+  { id: 'vitality', name: 'Extra Stuffing', nameZh: '加厚棉花', icon: '❤️', rarity: 'common', maxStacks: 4, role: 'survive', desc: '最大生命 +25 并回满' },
+  { id: 'swift', name: 'Roller Skates', nameZh: '溜冰鞋', icon: '🛼', rarity: 'common', maxStacks: 3, role: 'mobility', desc: '移动速度 +8%' },
+  { id: 'skillCd', name: 'Wind-up Key', nameZh: '发条钥匙', icon: '🔑', rarity: 'rare', maxStacks: 3, role: 'mobility', desc: 'F 技能冷却 -15%' },
+  { id: 'magazine', name: 'Gumball Clip', nameZh: '大弹匣', icon: '🍬', rarity: 'common', maxStacks: 3, role: 'survive', desc: '弹匣 +30%，换弹 -15%' },
+  { id: 'stormCore', name: 'Storm Core', nameZh: '风暴核心', icon: '🌀', rarity: 'legendary', maxStacks: 1, role: 'fire', desc: '协同：闪电必定触发且附加灼烧', requires: ['lightning', 'infusion'] },
+  { id: 'sugarRush', name: 'Sugar Rush', nameZh: '糖分暴走', icon: '🍭', rarity: 'legendary', maxStacks: 1, role: 'mobility', desc: '连击倍率上限 +1，击杀减少技能冷却 0.5 秒' },
+  { id: 'rollReload', name: 'Tumble Reload', nameZh: '翻滚装填', icon: '🎯', rarity: 'rare', maxStacks: 1, role: 'mobility', desc: '翻滚结束时立刻填满当前弹匣' },
+  { id: 'reloadPulse', name: 'Reload Pop', nameZh: '换弹糖波', icon: '💫', rarity: 'rare', maxStacks: 1, role: 'control', desc: '换弹完成时放出短距糖波，冻结并轻伤附近敌人' },
+  { id: 'windupBreak', name: 'Sour Interrupt', nameZh: '酸糖打断', icon: '🛑', rarity: 'epic', maxStacks: 1, role: 'control', desc: '命中正在前摇/攻击的普通敌人，强制进入硬直' },
+  { id: 'bubblePop', name: 'Pinata Shot', nameZh: '刺破泡泡', icon: '📌', rarity: 'rare', maxStacks: 1, role: 'control', desc: '射击已被泡泡困住的敌人会立刻引爆泡泡' },
+  { id: 'pierceFocus', name: 'Focus Pierce', nameZh: '开镜贯穿', icon: '🔭', rarity: 'epic', maxStacks: 1, role: 'fire', desc: '瞄准时的 hitscan 子弹可再贯穿 1 名敌人' },
+  { id: 'skillSurge', name: 'Sugar Surge', nameZh: '技能糖潮', icon: '🥤', rarity: 'rare', maxStacks: 1, role: 'fire', desc: '发动 F 技能后 3 秒内射速 +45%' },
 ];
 export const getUpgrade = (id: string) => UPGRADES.find((u) => u.id === id)!;
 export type Stacks = Partial<Record<UpgradeId, number>>;
@@ -43,28 +55,51 @@ export function upgradeWeight(u: UpgradeDef, stacks: Stacks) {
   if (!isEligible(u, stacks)) return 0;
   return RARITY[u.rarity].weight * (u.requires ? 3 : 1);
 }
-/** weighted pick of n distinct eligible upgrades */
-export function rollChoices(stacks: Stacks, n = 3, rng: () => number = Math.random): UpgradeDef[] {
-  const pool = UPGRADES.map((u) => ({ u, w: upgradeWeight(u, stacks) })).filter((x) => x.w > 0);
+
+export interface RollOpts { exclude?: UpgradeId[]; diversify?: boolean }
+
+function pickWeighted(pool: { u: UpgradeDef; w: number }[], rng: () => number): number {
+  const total = pool.reduce((a, x) => a + x.w, 0);
+  let r = rng() * total, i = 0;
+  for (; i < pool.length - 1; i++) { r -= pool[i].w; if (r < 0) break; }
+  return i;
+}
+
+/** weighted pick of n distinct eligible upgrades; when diversify, prefer distinct roles. */
+export function rollChoices(stacks: Stacks, n = 3, rng: () => number = Math.random, opts: RollOpts = {}): UpgradeDef[] {
+  const banned = new Set(opts.exclude ?? []);
+  const pool = UPGRADES.map((u) => ({ u, w: banned.has(u.id) ? 0 : upgradeWeight(u, stacks) })).filter((x) => x.w > 0);
   const out: UpgradeDef[] = [];
+  const usedRoles = new Set<UpgradeRole>();
   while (out.length < n && pool.length) {
-    const total = pool.reduce((a, x) => a + x.w, 0);
-    let r = rng() * total, i = 0;
-    for (; i < pool.length - 1; i++) { r -= pool[i].w; if (r < 0) break; }
-    out.push(pool[i].u); pool.splice(i, 1);
+    let cand = pool;
+    if (opts.diversify !== false && usedRoles.size < 4) {
+      const fresh = pool.filter((x) => !usedRoles.has(x.u.role));
+      if (fresh.length) cand = fresh;
+    }
+    const i = pickWeighted(cand, rng);
+    const chosen = cand[i];
+    const pi = pool.indexOf(chosen);
+    out.push(chosen.u); usedRoles.add(chosen.u.role); pool.splice(pi, 1);
   }
   return out;
 }
+
 export function addUpgrade(stacks: Stacks, id: UpgradeId): boolean {
-  const u = getUpgrade(id); if (!isEligible(u, stacks)) return false;
+  const u = getUpgrade(id); if (!u || !isEligible(u, stacks)) return false;
   stacks[id] = (stacks[id] ?? 0) + 1; return true;
 }
+
+export const OFFER_SKIP = '__skip__';
+export const OFFER_REROLL = '__reroll__';
+export const isOfferAction = (id: string) => id === OFFER_SKIP || id === OFFER_REROLL;
 
 export interface Mods {
   fireRate: number; damage: number; extraProjectiles: number; bounces: number; critChance: number; lifesteal: number;
   chainChance: number; chainTargets: number; freezeOnKill: boolean; rollIframes: number; rollCdMult: number; splitShards: number;
   burnDps: number; maxHpBonus: number; move: number; skillCdMult: number; magMult: number; reloadMult: number;
   comboCapBonus: number; killCdr: number;
+  rollReload: boolean; reloadPulse: boolean; windupBreak: boolean; bubblePop: boolean; pierceFocus: boolean; skillSurge: boolean;
 }
 export function computeMods(st: Stacks): Mods {
   const n = (id: UpgradeId) => st[id] ?? 0;
@@ -79,5 +114,7 @@ export function computeMods(st: Stacks): Mods {
     burnDps: n('infusion') ? (storm ? 12 : 8) : 0, maxHpBonus: 25 * n('vitality'), move: 1 + 0.08 * n('swift'),
     skillCdMult: Math.pow(0.85, n('skillCd')), magMult: 1 + 0.3 * n('magazine'), reloadMult: Math.pow(0.85, n('magazine')),
     comboCapBonus: n('sugarRush'), killCdr: n('sugarRush') ? 0.5 : 0,
+    rollReload: n('rollReload') > 0, reloadPulse: n('reloadPulse') > 0, windupBreak: n('windupBreak') > 0,
+    bubblePop: n('bubblePop') > 0, pierceFocus: n('pierceFocus') > 0, skillSurge: n('skillSurge') > 0,
   };
 }

@@ -7,7 +7,7 @@ import { normCode } from '../net/protocol';
 import { initAudio } from '../audio/sfx';
 import { CHARACTERS, getCharacter, isUnlocked, CharacterId } from '../game/characters/registry';
 import { STAGES, stageUnlocked, worldUnlocked } from '../game/progression/adventure';
-import { getUpgrade, RARITY } from '../game/progression/upgrades';
+import { getUpgrade, RARITY, OFFER_SKIP, OFFER_REROLL } from '../game/progression/upgrades';
 import { chooseUpgrade } from '../game/systems/runFlow';
 import { world } from '../game/core/world';
 import { H, PLAZA, FOREST, VILLAGE, HOUSES, BLOCKS } from '../game/levels/arenaLayout';
@@ -140,14 +140,14 @@ export function CoopHud() {
 
 /** co-op: each player picks their own upgrade (sim keeps running) */
 export function CoopUpgrade() {
-  const ids = useUI((s) => s.upgradeChoices), reason = useUI((s) => s.upgradeReason);
+  const ids = useUI((s) => s.upgradeChoices), reason = useUI((s) => s.upgradeReason), rerolls = useUI((s) => s.upgradeRerolls);
   useEffect(() => {
     const k = (e: KeyboardEvent) => { const i = ['Digit1', 'Digit2', 'Digit3'].indexOf(e.code); if (i >= 0 && ids[i]) chooseUpgrade(ids[i]); };
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);
   }, [ids]);
   return (
     <div id="coop-upgrade" className="absolute left-1/2 top-24 -translate-x-1/2 flex flex-col items-center pointer-events-auto">
-      <div className="text-2xl font-black text-white outline-text">选择你的强化 · 按 1 / 2 / 3（{reason === 'stage' ? '关卡奖励' : '生存奖励'}）</div>
+      <div className="text-2xl font-black text-white outline-text">选择你的强化 · 按 1 / 2 / 3（{reason === 'start' ? '开局自选' : reason === 'stage' ? '关卡奖励' : '波次奖励'}）</div>
       <div className="flex gap-3 mt-2">
         {ids.map((id, i) => { const u = getUpgrade(id), r = RARITY[u.rarity]; return (
           <button key={id} id={`upg-${i}`} onClick={() => chooseUpgrade(id)} className="w-44 rounded-2xl p-3 text-left hover:-translate-y-1 transition-transform"
@@ -155,6 +155,10 @@ export function CoopUpgrade() {
             <div className="flex justify-between"><span className="font-black text-purple-900/60">{i + 1}</span><span className="text-3xl">{u.icon}</span></div>
             <div className="font-black text-purple-900">{u.nameZh}</div><div className="text-xs font-bold text-purple-800">{u.desc}</div>
           </button>); })}
+      </div>
+      <div className="flex gap-2 mt-2">
+        <button id="upg-reroll" disabled={rerolls <= 0} onClick={() => chooseUpgrade(OFFER_REROLL)} className="candy-btn bg-candy-mint text-purple-900 text-sm disabled:opacity-40">{rerolls > 0 ? `重随（${rerolls}）` : '已重随'}</button>
+        <button id="upg-skip" onClick={() => chooseUpgrade(OFFER_SKIP)} className="candy-btn bg-candy-grape text-white text-sm">跳过</button>
       </div>
     </div>
   );
